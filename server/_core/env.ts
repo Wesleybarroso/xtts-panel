@@ -7,4 +7,10 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  redisUrl: process.env.REDIS_URL ?? "",
+  xttsServerUrl: process.env.XTTS_SERVER_URL ?? "",
+  xttsApiKey: process.env.XTTS_API_KEY ?? "",
+  webhookSecret: process.env.WEBHOOK_SECRET ?? "",
+  corsOrigins: process.env.CORS_ORIGINS ?? "",
+  nodeEnv: process.env.NODE_ENV ?? "development",
 };

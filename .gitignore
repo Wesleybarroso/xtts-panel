@@ -9,6 +9,8 @@ build/
 
 # Environment variables
 .env
+.env.*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local
@@ -38,6 +40,16 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# XTTS runtime data and secrets
+outputs/
+*.wav
+*.mp3
+models/
+checkpoints/
+secrets/
+*.pem
+*.key
 
 # Runtime data
 pids
