@@ -1,33 +1,60 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import {
+  Activity, AudioLines, BarChart3, Bell, ChevronDown, Clock3, FileAudio,
+  Gauge, Headphones, History, KeyRound, LayoutDashboard, Menu, Mic2,
+  MoreHorizontal, Play, Plus, Radio, Server, Settings2, ShieldCheck,
+  Sparkles, Users, Webhook, X, Zap,
+} from "lucide-react";
+import { useState } from "react";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+const nav = [
+  { label: "Dashboard", icon: LayoutDashboard, active: true },
+  { label: "Geração", icon: Sparkles, items: ["Nova geração", "Histórico", "Jobs"] },
+  { label: "Vozes", icon: Mic2, items: ["Vozes disponíveis", "Minhas vozes"] },
+  { label: "Servidores", icon: Server, items: ["Servidores XTTS", "Monitoramento"] },
+  { label: "Integrações", icon: Webhook, items: ["API", "Webhooks", "n8n"] },
+  { label: "API Keys", icon: KeyRound },
+  { label: "Usuários", icon: Users },
+  { label: "Estatísticas", icon: BarChart3 },
+  { label: "Logs", icon: Activity },
+  { label: "Configurações", icon: Settings2 },
+];
+
+const jobs = [
+  { id: "job_8f2a91", text: "Olá, tudo bem? Como posso ajudar...", voice: "Marcos Rudaski", status: "Concluído", time: "2.4s", created: "agora" },
+  { id: "job_7d184c", text: "Sua solicitação foi recebida com sucesso.", voice: "Ana Clara", status: "Processando", time: "—", created: "há 2 min" },
+  { id: "job_6b390a", text: "Obrigado por entrar em contato conosco.", voice: "Marcos Rudaski", status: "Concluído", time: "3.1s", created: "há 8 min" },
+  { id: "job_53c2de", text: "Não foi possível concluir a operação.", voice: "Carlos", status: "Falhou", time: "—", created: "há 13 min" },
+];
+
+function MiniChart() {
+  const points = "0,72 25,54 50,63 75,31 100,42 125,20 150,35 175,10 200,27 225,18 250,29 275,5 300,16";
+  return <svg viewBox="0 0 300 84" className="h-20 w-full overflow-visible" preserveAspectRatio="none"><defs><linearGradient id="fill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#2f80ed" stopOpacity=".25"/><stop offset="1" stopColor="#2f80ed" stopOpacity="0"/></linearGradient></defs><polyline points={`${points} 300,84 0,84`} fill="url(#fill)" stroke="none"/><polyline points={points} fill="none" stroke="#2f80ed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+}
+
 export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const firstName = user?.name?.split(" ")[0] || "Alex";
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
-  return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
-  );
+  return <div className="min-h-screen bg-[#f6f8fc] text-[#182235]">
+    <aside className={cn("fixed inset-y-0 left-0 z-40 w-[254px] border-r border-[#e5eaf2] bg-white px-4 py-5 transition-transform lg:translate-x-0", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
+      <div className="flex items-center justify-between px-2 pb-7"><div className="flex items-center gap-2.5"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1668e8] text-white shadow-lg shadow-blue-200"><AudioLines size={20}/></div><div><div className="text-[15px] font-bold tracking-tight">xtts<span className="text-[#1668e8]">panel</span></div><div className="text-[9px] font-semibold uppercase tracking-[.18em] text-slate-400">audio infrastructure</div></div></div><button className="lg:hidden text-slate-400" onClick={() => setMobileOpen(false)}><X size={20}/></button></div>
+      <div className="mb-4 px-2 text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">Workspace</div>
+      <nav className="space-y-1">{nav.map(({ label, icon: Icon, items, active }) => <div key={label}><button className={cn("group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition-colors", active ? "bg-[#edf4ff] font-semibold text-[#1668e8]" : "text-slate-600 hover:bg-slate-50 hover:text-[#1668e8]")}><Icon size={17} strokeWidth={active ? 2.3 : 1.8}/><span>{label}</span>{items && <ChevronDown size={14} className="ml-auto text-slate-400"/>}</button>{items && <div className="ml-[39px] mt-1 space-y-0.5 border-l border-slate-100 pl-3">{items.map(item => <button key={item} className="block w-full rounded-lg px-2 py-1.5 text-left text-[12px] text-slate-500 hover:text-[#1668e8]">{item}</button>)}</div>}</div>)}</nav>
+      <div className="absolute bottom-5 left-4 right-4 rounded-2xl bg-[#f5f8fd] p-3"><div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dceaff] text-xs font-bold text-[#1668e8]">{firstName[0]}</div><div className="min-w-0"><div className="truncate text-xs font-semibold">{user?.name || "Alex Morgan"}</div><div className="truncate text-[10px] text-slate-400">{user?.email || "admin@xttspanel.com"}</div></div><button onClick={logout} className="ml-auto text-slate-400 hover:text-[#1668e8]"><MoreHorizontal size={17}/></button></div></div>
+    </aside>
+    {mobileOpen && <button aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-slate-900/20 lg:hidden"/>}
+    <main className="lg:pl-[254px]"><header className="sticky top-0 z-20 flex h-[72px] items-center justify-between border-b border-[#e5eaf2] bg-white/90 px-5 backdrop-blur md:px-9"><div className="flex min-w-0 items-center gap-3"><button className="shrink-0 text-slate-500 lg:hidden" onClick={() => setMobileOpen(true)}><Menu size={22}/></button><div className="min-w-0"><div className="truncate text-[11px] font-medium text-slate-400">Wednesday, September 2, 2026</div><h1 className="truncate text-lg font-bold tracking-tight">Good morning, {firstName} <span className="text-lg">✦</span></h1></div></div><div className="flex shrink-0 items-center gap-2 sm:gap-3"><button className="relative rounded-xl p-2 text-slate-500 hover:bg-slate-50"><Bell size={19}/><span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[#f04461]"/></button><div className="hidden h-7 w-px bg-slate-200 sm:block"/><Button onClick={() => user ? undefined : startLogin()} className="hidden h-9 rounded-xl bg-[#1668e8] px-4 text-xs font-semibold shadow-sm shadow-blue-200 hover:bg-[#0d57ca] sm:flex"><Plus size={15} className="mr-1.5"/> Nova geração</Button></div></header>
+      <div className="mx-auto max-w-[1440px] px-5 py-7 md:px-9"><div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><div className="mb-1 flex items-center gap-2 text-xs font-semibold text-[#1668e8]"><span className="h-1.5 w-1.5 rounded-full bg-[#1668e8]"/> Overview</div><h2 className="text-[26px] font-bold tracking-[-.03em]">Your workspace</h2><p className="mt-1 text-sm text-slate-500">Monitor your audio generation infrastructure.</p></div><button className="flex items-center gap-2 self-start rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 shadow-sm"><span className="h-2 w-2 rounded-full bg-[#39b779]"/> Last 7 days <ChevronDown size={14}/></button></div>
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[{icon: Zap, label:"Generations today", value:"127", delta:"+18.4%", color:"blue", note:"vs. last week"},{icon: FileAudio, label:"Audio generated", value:"42 min", delta:"+9.2%", color:"violet", note:"of audio"},{icon: Clock3, label:"Avg. processing time", value:"4.2s", delta:"-12.8%", color:"green", note:"vs. last week"},{icon: Server, label:"Servers online", value:"1 / 1", delta:"100%", color:"amber", note:"operational"}].map(({icon: Icon,label,value,delta,color,note}) => <div key={label} className="rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-[0_4px_18px_rgba(22,49,89,.035)]"><div className="flex items-start justify-between"><div className={cn("flex h-9 w-9 items-center justify-center rounded-xl", color === "blue" ? "bg-blue-50 text-blue-600" : color === "violet" ? "bg-violet-50 text-violet-600" : color === "green" ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600")}><Icon size={18}/></div><span className={cn("rounded-md px-2 py-1 text-[10px] font-bold", delta.startsWith("-") ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600")}>{delta}</span></div><div className="mt-4 text-[26px] font-bold tracking-tight">{value}</div><div className="mt-1 text-xs text-slate-500">{label} <span className="text-slate-300">·</span> {note}</div></div>)}</section>
+        <section className="mt-5 grid gap-5 xl:grid-cols-[1.6fr_1fr]"><div className="rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-[0_4px_18px_rgba(22,49,89,.035)]"><div className="flex items-center justify-between"><div><h3 className="text-sm font-bold">Generations overview</h3><p className="mt-1 text-xs text-slate-400">Total audio jobs processed</p></div><div className="flex items-center gap-3 text-[10px] text-slate-400"><span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-[#2f80ed]"/> Generations</span><span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-200"/> Previous</span></div></div><div className="mt-5 flex items-end gap-2"><span className="text-2xl font-bold">842</span><span className="mb-1 text-xs font-semibold text-emerald-500">+24.6%</span></div><div className="mt-2"><MiniChart/></div><div className="mt-1 flex justify-between text-[10px] text-slate-400"><span>Aug 27</span><span>Aug 29</span><span>Aug 31</span><span>Sep 02</span></div></div><div className="rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-[0_4px_18px_rgba(22,49,89,.035)]"><div className="flex items-center justify-between"><div><h3 className="text-sm font-bold">Server health</h3><p className="mt-1 text-xs text-slate-400">Real-time infrastructure status</p></div><button className="text-slate-400"><MoreHorizontal size={18}/></button></div><div className="mt-6 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4"><div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#1668e8] shadow-sm"><Radio size={18}/><span className="absolute right-0 top-0 h-2.5 w-2.5 rounded-full border-2 border-white bg-emerald-500"/></div><div><div className="text-sm font-bold">XTTS VPS 1</div><div className="text-[11px] text-slate-500">67.217.247.57:8000</div></div></div><Badge className="border-0 bg-emerald-100 text-[10px] font-bold text-emerald-700">ONLINE</Badge></div><div className="mt-5 grid grid-cols-3 gap-2 border-t border-emerald-100 pt-3"><div><div className="text-[10px] text-slate-400">Device</div><div className="mt-1 text-xs font-bold">CPU</div></div><div><div className="text-[10px] text-slate-400">CUDA</div><div className="mt-1 text-xs font-bold">false</div></div><div><div className="text-[10px] text-slate-400">Jobs</div><div className="mt-1 text-xs font-bold">1 active</div></div></div></div><div className="mt-4 flex items-center justify-between text-[11px] text-slate-400"><span className="flex items-center gap-1.5"><Activity size={13}/> Updated 8 seconds ago</span><button className="font-semibold text-[#1668e8] hover:underline">View server</button></div></div></section>
+        <section className="mt-5 rounded-2xl border border-[#e8edf5] bg-white shadow-[0_4px_18px_rgba(22,49,89,.035)]"><div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center"><div><h3 className="text-sm font-bold">Recent jobs</h3><p className="mt-1 text-xs text-slate-400">Latest audio generation activity</p></div><button className="flex items-center gap-1 text-xs font-semibold text-[#1668e8]">View all jobs <span>→</span></button></div><div className="overflow-x-auto"><table className="w-full min-w-[720px] text-left"><thead><tr className="text-[10px] font-bold uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Job ID</th><th className="px-5 py-3">Content</th><th className="px-5 py-3">Voice</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Time</th><th className="px-5 py-3">Created</th><th/></tr></thead><tbody>{jobs.map(job => <tr key={job.id} className="border-t border-slate-50 text-xs"><td className="px-5 py-4 font-mono font-semibold text-[#1668e8]">{job.id}</td><td className="max-w-[230px] truncate px-5 py-4 font-medium text-slate-700">{job.text}</td><td className="px-5 py-4 text-slate-500">{job.voice}</td><td className="px-5 py-4"><span className={cn("inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[10px] font-bold", job.status === "Concluído" ? "bg-emerald-50 text-emerald-600" : job.status === "Processando" ? "bg-blue-50 text-blue-600" : "bg-rose-50 text-rose-600")}><span className="h-1.5 w-1.5 rounded-full bg-current"/>{job.status}</span></td><td className="px-5 py-4 text-slate-500">{job.time}</td><td className="px-5 py-4 text-slate-400">{job.created}</td><td className="px-5 py-4 text-right"><button className="rounded-lg p-2 text-slate-400 hover:bg-blue-50 hover:text-[#1668e8]"><Play size={14}/></button></td></tr>)}</tbody></table></div></section>
+        <div className="mt-5 grid gap-5 md:grid-cols-3"><div className="rounded-2xl bg-[#1668e8] p-5 text-white shadow-lg shadow-blue-100 md:col-span-2"><div className="flex items-start justify-between"><div><div className="mb-2 flex items-center gap-2 text-xs font-semibold text-blue-100"><Headphones size={15}/> Ready to create?</div><h3 className="text-xl font-bold tracking-tight">Turn your words into natural audio.</h3><p className="mt-1 max-w-md text-xs leading-5 text-blue-100">Generate high-quality speech with XTTS-v2 in seconds. Choose a voice and get started.</p></div><div className="hidden rounded-2xl bg-white/10 p-3 md:block"><AudioLines size={30}/></div></div><Button onClick={() => user ? undefined : startLogin()} className="mt-5 h-9 rounded-lg bg-white px-4 text-xs font-bold text-[#1668e8] hover:bg-blue-50"><Plus size={15} className="mr-1.5"/> New generation</Button></div><div className="rounded-2xl border border-[#e8edf5] bg-white p-5"><div className="flex items-center gap-2 text-[#1668e8]"><Gauge size={17}/><span className="text-xs font-bold">System usage</span></div><div className="mt-5 flex items-end justify-between"><span className="text-2xl font-bold">68%</span><span className="text-[10px] text-slate-400">of monthly limit</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full w-[68%] rounded-full bg-[#1668e8]"/></div><div className="mt-3 flex justify-between text-[10px] text-slate-400"><span>6,800 / 10,000 chars</span><button className="font-semibold text-[#1668e8]">Manage plan</button></div></div></div>
+      </div></main>
+  </div>;
 }
