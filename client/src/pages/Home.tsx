@@ -10,6 +10,7 @@ import {
   Sparkles, Users, Webhook, X, Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 
 const languages = [
   { code: "en", label: "English", short: "EN" },
@@ -32,6 +33,8 @@ const navLabels = {
   es: ["Dashboard", "Generación", "Voces", "Servidores", "Integraciones", "API Keys", "Usuarios", "Estadísticas", "Registros", "Configuración"],
 } as const;
 
+const moduleRoutes = [["/dashboard", "/tts", "/jobs"], ["/voices", "/voices"], ["/servers", "/servers"], ["/integrations", "/webhooks", "/integrations"]];
+
 const navItems = [
   { icon: LayoutDashboard }, { icon: Sparkles, items: ["Nova geração", "Histórico", "Jobs"] }, { icon: Mic2, items: ["Vozes disponíveis", "Minhas vozes"] }, { icon: Server, items: ["Servidores XTTS", "Monitoramento"] }, { icon: Webhook, items: ["API", "Webhooks", "n8n"] }, { icon: KeyRound }, { icon: Users }, { icon: BarChart3 }, { icon: Activity }, { icon: Settings2 },
 ];
@@ -50,9 +53,13 @@ function MiniChart() {
 
 export default function Home() {
   const { user, logout } = useAuth();
+  const [, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [language, setLanguage] = useState<(typeof languages)[number]["code"]>("pt-BR");
   const [languageOpen, setLanguageOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<number[]>([]);
+  const toggleGroup = (index: number) => setOpenGroups(groups => groups.includes(index) ? groups.filter(group => group !== index) : [...groups, index]);
+  const closeMobileMenu = () => setMobileOpen(false);
   const t = translations[language];
   const currentLanguage = languages.find(item => item.code === language) ?? languages[1];
   const firstName = user?.name?.split(" ")[0] || "Alex";
@@ -61,7 +68,7 @@ export default function Home() {
     <aside className={cn("fixed inset-y-0 left-0 z-40 w-[254px] overflow-y-auto border-r border-[#e5eaf2] bg-white px-4 py-5 transition-transform lg:translate-x-0", mobileOpen ? "translate-x-0" : "-translate-x-full")}>
       <div className="flex items-center justify-between px-2 pb-7"><div className="flex items-center gap-2.5"><div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1668e8] text-white shadow-lg shadow-blue-200"><AudioLines size={20}/></div><div><div className="text-[15px] font-bold tracking-tight">xtts<span className="text-[#1668e8]">panel</span></div><div className="text-[9px] font-semibold uppercase tracking-[.18em] text-slate-400">audio infrastructure</div></div></div><button className="lg:hidden text-slate-400" onClick={() => setMobileOpen(false)}><X size={20}/></button></div>
       <div className="mb-4 px-2 text-[10px] font-bold uppercase tracking-[.16em] text-slate-400">{t.workspace}</div>
-      <nav className="space-y-1">{navItems.map(({ icon: Icon, items }, index) => { const label = navLabels[language][index]; const active = index === 0; return <div key={label}><button className={cn("group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition-colors", active ? "bg-[#edf4ff] font-semibold text-[#1668e8]" : "text-slate-600 hover:bg-slate-50 hover:text-[#1668e8]")}><Icon size={17} strokeWidth={active ? 2.3 : 1.8}/><span>{label}</span>{items && <ChevronDown size={14} className="ml-auto text-slate-400"/>}</button>{items && <div className="ml-[39px] mt-1 space-y-0.5 border-l border-slate-100 pl-3">{items.map(item => <button key={item} className="block w-full rounded-lg px-2 py-1.5 text-left text-[12px] text-slate-500 hover:text-[#1668e8]">{item}</button>)}</div>}</div>; })}</nav>
+      <nav className="space-y-1">{navItems.map(({ icon: Icon, items }, index) => { const label = navLabels[language][index]; const active = index === 0; return <div key={label}><button className={cn("group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[13px] font-medium transition-colors", active ? "bg-[#edf4ff] font-semibold text-[#1668e8]" : "text-slate-600 hover:bg-slate-50 hover:text-[#1668e8]")} onClick={() => items ? toggleGroup(index) : (closeMobileMenu(), setLocation(moduleRoutes[index]?.[0] ?? "/dashboard"))}><Icon size={17} strokeWidth={active ? 2.3 : 1.8}/><span>{label}</span>{items && <ChevronDown size={14} className={cn("ml-auto text-slate-400 transition-transform", openGroups.includes(index) && "rotate-180")}/>}</button>{items && openGroups.includes(index) && <div className="ml-[39px] mt-1 space-y-0.5 border-l border-slate-100 pl-3">{items.map((item, itemIndex) => <button key={item} onClick={() => { closeMobileMenu(); setLocation(moduleRoutes[index]?.[itemIndex] ?? "/dashboard"); }} className="block w-full rounded-lg px-2 py-1.5 text-left text-[12px] text-slate-500 hover:text-[#1668e8]">{item}</button>)}</div>}</div>; })}</nav>
       <div className="absolute bottom-5 left-4 right-4 rounded-2xl bg-[#f5f8fd] p-3"><div className="flex items-center gap-2"><div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#dceaff] text-xs font-bold text-[#1668e8]">{firstName[0]}</div><div className="min-w-0"><div className="truncate text-xs font-semibold">{user?.name || "Alex Morgan"}</div><div className="truncate text-[10px] text-slate-400">{user?.email || "admin@xttspanel.com"}</div></div><button onClick={logout} className="ml-auto text-slate-400 hover:text-[#1668e8]"><MoreHorizontal size={17}/></button></div></div>
     </aside>
     {mobileOpen && <button aria-label="Fechar menu" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-slate-900/20 lg:hidden"/>}

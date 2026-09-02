@@ -1,0 +1,25 @@
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Activity, ArrowLeft, Code2, Database, FileAudio, KeyRound, Link2, ListTodo, Mic2, Plus, Radio, Server, Settings2, ShieldCheck, Users, Webhook } from "lucide-react";
+
+const modules: Record<string, { title: string; description: string; endpoint: string; icon: typeof Activity; action: string }> = {
+  "/tts": { title: "Nova geração", description: "Crie áudio natural com XTTS-v2 usando o servidor configurado.", endpoint: "POST /api/v1/tts", icon: FileAudio, action: "Configurar geração" },
+  "/jobs": { title: "Jobs", description: "Acompanhe a fila, status e tempo de processamento das gerações.", endpoint: "GET /api/v1/jobs", icon: ListTodo, action: "Atualizar jobs" },
+  "/voices": { title: "Vozes disponíveis", description: "Consulte as vozes do sistema e prepare vozes personalizadas.", endpoint: "GET /api/v1/voices", icon: Mic2, action: "Adicionar voz" },
+  "/servers": { title: "Servidores XTTS", description: "Gerencie servidores, health checks e capacidade de processamento.", endpoint: "GET /api/v1/servers", icon: Server, action: "Adicionar servidor" },
+  "/api-keys": { title: "API Keys", description: "Crie e revogue chaves para integrações externas com segurança.", endpoint: "GET /api/v1/api-keys", icon: KeyRound, action: "Criar API Key" },
+  "/webhooks": { title: "Webhooks", description: "Configure eventos de jobs e acompanhe as entregas assinadas.", endpoint: "GET /api/v1/webhooks", icon: Webhook, action: "Adicionar webhook" },
+  "/integrations": { title: "Integrações", description: "Conecte n8n, API pública e os fluxos de automação do painel.", endpoint: "POST /api/v1/tts", icon: Link2, action: "Configurar integração" },
+  "/stats": { title: "Estatísticas", description: "Analise gerações, caracteres, idiomas, vozes e servidores.", endpoint: "GET /api/v1/stats", icon: Activity, action: "Carregar estatísticas" },
+  "/logs": { title: "Logs", description: "Investigue eventos operacionais sem expor credenciais sensíveis.", endpoint: "GET /api/v1/logs", icon: Radio, action: "Atualizar logs" },
+  "/users": { title: "Usuários", description: "Administre usuários, papéis e permissões do workspace.", endpoint: "GET /api/v1/users", icon: Users, action: "Adicionar usuário" },
+  "/settings": { title: "Configurações", description: "Defina preferências, limites, storage e comportamento da plataforma.", endpoint: "GET /api/v1/settings", icon: Settings2, action: "Editar configurações" },
+  "/docs": { title: "Documentação da API", description: "Consulte contratos, autenticação e exemplos para integrações.", endpoint: "GET /docs", icon: Code2, action: "Abrir documentação" },
+};
+
+export default function ModulePage({ path }: { path: string }) {
+  const [, setLocation] = useLocation();
+  const module = modules[path] ?? modules["/integrations"];
+  const Icon = module.icon;
+  return <div className="min-h-screen bg-[#f6f8fc] px-5 py-7 text-[#182235] md:px-9"><div className="mx-auto max-w-[1000px]"><button onClick={() => setLocation("/dashboard")} className="mb-8 flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-[#1668e8]"><ArrowLeft size={15}/> Voltar ao dashboard</button><div className="rounded-2xl border border-[#e8edf5] bg-white p-6 shadow-[0_4px_18px_rgba(22,49,89,.035)] md:p-8"><div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between"><div className="flex items-start gap-4"><div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-[#1668e8]"><Icon size={23}/></div><div><div className="mb-2 text-xs font-semibold text-[#1668e8]">XTTS Panel module</div><h1 className="text-2xl font-bold tracking-tight">{module.title}</h1><p className="mt-2 max-w-xl text-sm leading-6 text-slate-500">{module.description}</p></div></div><span className="inline-flex w-fit items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-700"><Database size={13}/> API connection ready</span></div><div className="mt-8 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 p-5"><div className="flex items-center gap-2 text-xs font-bold text-slate-700"><ShieldCheck size={15} className="text-emerald-500"/> Contrato preparado</div><p className="mt-2 text-xs text-slate-500">Esta página já possui o ponto de integração definido. Ao conectar a API Central, os dados reais substituirão este estado inicial sem alterar o layout.</p><code className="mt-4 block w-fit rounded-md bg-white px-3 py-2 font-mono text-[11px] text-[#1668e8] shadow-sm">{module.endpoint}</code></div><div className="mt-6 flex flex-wrap gap-3"><Button onClick={() => setLocation("/dashboard")} className="rounded-lg bg-[#1668e8] text-xs font-semibold hover:bg-[#0d57ca]"><Plus size={15} className="mr-1.5"/>{module.action}</Button><Button variant="outline" onClick={() => setLocation("/docs")} className="rounded-lg bg-white text-xs font-semibold"><Code2 size={15} className="mr-1.5"/>Ver contrato da API</Button></div></div></div></div>;
+}
