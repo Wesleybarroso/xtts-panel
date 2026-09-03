@@ -7,6 +7,7 @@ const modules: Record<string, { title: string; description: string; endpoint: st
   "/tts": { title: "Nova geração", description: "Crie áudio natural com XTTS-v2 usando o servidor configurado.", endpoint: "POST /api/v1/tts", icon: FileAudio, action: "Configurar geração" },
   "/jobs": { title: "Jobs", description: "Acompanhe a fila, status e tempo de processamento das gerações.", endpoint: "GET /api/v1/jobs", icon: ListTodo, action: "Atualizar jobs" },
   "/voices": { title: "Vozes disponíveis", description: "Consulte as vozes do sistema e prepare vozes personalizadas.", endpoint: "GET /api/v1/voices", icon: Mic2, action: "Adicionar voz" },
+  "/voices/mine": { title: "Minhas vozes", description: "Gerencie suas vozes personalizadas e referências de áudio.", endpoint: "GET /api/v1/voices?type=custom", icon: Mic2, action: "Adicionar voz personalizada" },
   "/servers": { title: "Servidores XTTS", description: "Gerencie servidores, health checks e capacidade de processamento.", endpoint: "GET /api/v1/servers", icon: Server, action: "Adicionar servidor" },
   "/api-keys": { title: "API Keys", description: "Crie e revogue chaves para integrações externas com segurança.", endpoint: "GET /api/v1/api-keys", icon: KeyRound, action: "Criar API Key" },
   "/webhooks": { title: "Webhooks", description: "Configure eventos de jobs e acompanhe as entregas assinadas.", endpoint: "GET /api/v1/webhooks", icon: Webhook, action: "Adicionar webhook" },

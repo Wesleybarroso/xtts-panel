@@ -16,6 +16,7 @@ function Router() {
       <Route path={"/tts"}>{() => <ModulePage path="/tts" />}</Route>
       <Route path={"/jobs"}>{() => <ModulePage path="/jobs" />}</Route>
       <Route path={"/voices"}>{() => <ModulePage path="/voices" />}</Route>
+      <Route path={"/voices/mine"}>{() => <ModulePage path="/voices/mine" />}</Route>
       <Route path={"/servers"}>{() => <ModulePage path="/servers" />}</Route>
       <Route path={"/api-keys"}>{() => <ModulePage path="/api-keys" />}</Route>
       <Route path={"/webhooks"}>{() => <ModulePage path="/webhooks" />}</Route>
