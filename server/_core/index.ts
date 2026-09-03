@@ -1,11 +1,14 @@
 import "dotenv/config";
 import express from "express";
+import multer from "multer";
 import { createServer } from "http";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
+import { generateXttsAudio } from "../services/xtts";
 import { createContext } from "./context";
+import { sdk } from "./sdk";
 import { serveStatic, setupVite } from "./vite";
 
 async function startServer() {
@@ -41,6 +44,30 @@ async function startServer() {
     const xtts = Boolean(process.env.XTTS_SERVER_URL);
     const healthy = database && redis && xtts;
     res.status(healthy ? 200 : 503).json({ success: healthy, data: { status: healthy ? "healthy" : "degraded", database: database ? "configured" : "missing", redis: redis ? "configured" : "missing", xtts_servers: xtts ? 1 : 0 }, message: healthy ? "Operation completed successfully" : "One or more dependencies are not configured" });
+  });
+  const upload = multer({ limits: { fields: 4, fieldSize: 5000 } });
+  app.post("/api/v1/tts", upload.none(), async (req, res) => {
+    try {
+      await sdk.authenticateRequest(req);
+    } catch {
+      return res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "Authentication is required" } });
+    }
+    const { text, language, speaker, format = "mp3" } = req.body as Record<string, string>;
+    const languages = ["pt", "en", "es", "fr", "de", "it", "pl", "tr", "ru", "zh-cn", "ja", "ko", "ar"];
+    if (!text?.trim() || text.length > 5000 || !languages.includes(language) || !speaker?.trim() || !["mp3", "wav"].includes(format)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_REQUEST", message: "text, language, speaker and format are required" } });
+    }
+    try {
+      const result = await generateXttsAudio({ text, language, speaker, format: format as "mp3" | "wav" });
+      const audio = Buffer.from(result.audioBase64, "base64");
+      res.setHeader("Content-Type", result.mimeType);
+      res.setHeader("Content-Length", audio.length);
+      res.setHeader("Content-Disposition", `inline; filename=xtts-${Date.now()}.${result.format}`);
+      return res.status(200).send(audio);
+    } catch (error) {
+      console.error("[XTTS] TTS generation failed:", error instanceof Error ? error.message : "unknown error");
+      return res.status(502).json({ success: false, error: { code: "XTTS_UNAVAILABLE", message: "The XTTS server could not generate the audio" } });
+    }
   });
   registerStorageProxy(app);
   registerOAuthRoutes(app);

@@ -5,7 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { protectedProcedure } from "./_core/trpc";
 import { listJobs, listServers, getJobStats } from "./db";
 import { z } from "zod";
-import { getXttsHealth, getXttsInfo, getXttsSpeakers } from "./services/xtts";
+import { generateXttsAudio, getXttsHealth, getXttsInfo, getXttsSpeakers } from "./services/xtts";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -28,6 +28,14 @@ export const appRouter = router({
   }),
   voices: router({
     list: protectedProcedure.query(async () => getXttsSpeakers()),
+  }),
+  tts: router({
+    generate: protectedProcedure.input(z.object({
+      text: z.string().trim().min(1).max(5000),
+      language: z.enum(["pt", "en", "es", "fr", "de", "it", "pl", "tr", "ru", "zh-cn", "ja", "ko", "ar"]),
+      speaker: z.string().trim().min(1).max(160),
+      format: z.enum(["mp3", "wav"]).default("mp3"),
+    })).mutation(({ input }) => generateXttsAudio(input)),
   }),
   jobs: router({
     list: protectedProcedure.input(z.object({ limit: z.number().min(1).max(100).default(20) }).optional()).query(({ input }) => listJobs(input?.limit ?? 20)),
