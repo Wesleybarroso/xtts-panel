@@ -33,7 +33,7 @@ const navLabels = {
   es: ["Dashboard", "Generación", "Voces", "Servidores", "Integraciones", "API Keys", "Usuarios", "Estadísticas", "Registros", "Configuración"],
 } as const;
 
-const moduleRoutes = [["/dashboard"], ["/tts", "/jobs", "/jobs"], ["/voices", "/voices/mine"], ["/servers", "/servers"], ["/integrations", "/webhooks", "/integrations"]];
+const moduleRoutes = [["/dashboard"], ["/tts", "/jobs", "/jobs"], ["/voices", "/voices/mine"], ["/servers", "/servers/monitoring"], ["/integrations", "/webhooks", "/integrations"]];
 
 const navItems = [
   { icon: LayoutDashboard }, { icon: Sparkles, items: ["Nova geração", "Histórico", "Jobs"] }, { icon: Mic2, items: ["Vozes disponíveis", "Minhas vozes"] }, { icon: Server, items: ["Servidores XTTS", "Monitoramento"] }, { icon: Webhook, items: ["API", "Webhooks", "n8n"] }, { icon: KeyRound }, { icon: Users }, { icon: BarChart3 }, { icon: Activity }, { icon: Settings2 },

@@ -19,6 +19,7 @@ function Router() {
       <Route path={"/voices/mine"}>{() => <ModulePage path="/voices/mine" />}</Route>
       <Route path={"/voices/mine/new"}>{() => <ModulePage path="/voices/mine/new" />}</Route>
       <Route path={"/servers"}>{() => <ModulePage path="/servers" />}</Route>
+      <Route path={"/servers/monitoring"}>{() => <ModulePage path="/servers/monitoring" />}</Route>
       <Route path={"/api-keys"}>{() => <ModulePage path="/api-keys" />}</Route>
       <Route path={"/webhooks"}>{() => <ModulePage path="/webhooks" />}</Route>
       <Route path={"/integrations"}>{() => <ModulePage path="/integrations" />}</Route>
