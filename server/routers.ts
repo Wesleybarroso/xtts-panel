@@ -5,7 +5,10 @@ import { publicProcedure, router } from "./_core/trpc";
 import { protectedProcedure } from "./_core/trpc";
 import { listJobs, listServers, getJobStats } from "./db";
 import { z } from "zod";
+import { randomUUID } from "node:crypto";
 import { generateXttsAudio, getXttsHealth, getXttsInfo, getXttsSpeakers } from "./services/xtts";
+import { createJob } from "./db";
+import { saveAudio } from "./services/storage";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -35,7 +38,15 @@ export const appRouter = router({
       language: z.enum(["pt", "en", "es", "fr", "de", "it", "pl", "tr", "ru", "zh-cn", "ja", "ko", "ar"]),
       speaker: z.string().trim().min(1).max(160),
       format: z.enum(["mp3", "wav"]).default("mp3"),
-    })).mutation(({ input }) => generateXttsAudio(input)),
+    })).mutation(async ({ ctx, input }) => {
+      const startedAt = Date.now();
+      const result = await generateXttsAudio(input);
+      const jobId = randomUUID().replace(/-/g, "").slice(0, 32);
+      const bytes = Buffer.from(result.audioBase64, "base64");
+      const filePath = await saveAudio(jobId, result.format, bytes);
+      await createJob({ id: jobId, userId: ctx.user.id, serverId: null, text: input.text, language: input.language, format: result.format, status: "completed", processingTime: (Date.now() - startedAt) / 1000, filePath, createdAt: new Date(), completedAt: new Date() });
+      return { ...result, jobId, downloadUrl: `/api/v1/jobs/${jobId}/download` };
+    }),
   }),
   jobs: router({
     list: protectedProcedure.input(z.object({ limit: z.number().min(1).max(100).default(20) }).optional()).query(({ input }) => listJobs(input?.limit ?? 20)),

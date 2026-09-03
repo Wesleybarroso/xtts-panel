@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, jobs, servers, users } from "../drizzle/schema";
+import { InsertJob, InsertUser, jobs, servers, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -111,6 +111,20 @@ export async function getJobStats() {
     failed: rows.filter(job => job.status === "failed").length,
     processing: rows.filter(job => job.status === "processing" || job.status === "queued").length,
   };
+}
+
+export async function createJob(job: InsertJob) {
+  const db = await getDb();
+  if (!db) return undefined;
+  await db.insert(jobs).values(job);
+  return job;
+}
+
+export async function getJobById(id: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(jobs).where(eq(jobs.id, id)).limit(1);
+  return result[0];
 }
 
 // TODO: add feature queries here as your schema grows.

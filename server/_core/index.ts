@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { randomUUID } from "node:crypto";
 import express from "express";
 import multer from "multer";
 import { createServer } from "http";
@@ -7,6 +8,8 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { generateXttsAudio } from "../services/xtts";
+import { saveAudio } from "../services/storage";
+import { createJob, getJobById } from "../db";
 import { createContext } from "./context";
 import { sdk } from "./sdk";
 import { serveStatic, setupVite } from "./vite";
@@ -47,8 +50,10 @@ async function startServer() {
   });
   const upload = multer({ limits: { fields: 4, fieldSize: 5000 } });
   app.post("/api/v1/tts", upload.none(), async (req, res) => {
+    const startedAt = Date.now();
+    let user;
     try {
-      await sdk.authenticateRequest(req);
+      user = await sdk.authenticateRequest(req);
     } catch {
       return res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "Authentication is required" } });
     }
@@ -60,13 +65,27 @@ async function startServer() {
     try {
       const result = await generateXttsAudio({ text, language, speaker, format: format as "mp3" | "wav" });
       const audio = Buffer.from(result.audioBase64, "base64");
+      const jobId = randomUUID().replace(/-/g, "").slice(0, 32);
+      const storedPath = await saveAudio(jobId, result.format, audio);
+      await createJob({ id: jobId, userId: user.id, serverId: null, text, language, format: result.format, status: "completed", processingTime: (Date.now() - startedAt) / 1000, filePath: storedPath, createdAt: new Date(), completedAt: new Date() });
       res.setHeader("Content-Type", result.mimeType);
       res.setHeader("Content-Length", audio.length);
       res.setHeader("Content-Disposition", `inline; filename=xtts-${Date.now()}.${result.format}`);
+      res.setHeader("X-Job-ID", jobId);
       return res.status(200).send(audio);
     } catch (error) {
       console.error("[XTTS] TTS generation failed:", error instanceof Error ? error.message : "unknown error");
       return res.status(502).json({ success: false, error: { code: "XTTS_UNAVAILABLE", message: "The XTTS server could not generate the audio" } });
+    }
+  });
+  app.get("/api/v1/jobs/:id/download", async (req, res) => {
+    try {
+      const user = await sdk.authenticateRequest(req);
+      const job = await getJobById(req.params.id);
+      if (!job || job.userId !== user.id || !job.filePath) return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Audio not found" } });
+      return res.download(job.filePath, `${job.id}.${job.format}`);
+    } catch {
+      return res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "Authentication is required" } });
     }
   });
   registerStorageProxy(app);
