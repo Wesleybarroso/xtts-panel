@@ -19,6 +19,8 @@ Crie um serviço a partir do `Dockerfile` na raiz do repositório. Use a porta i
 | `CORS_ORIGINS` | Sim | Lista separada por vírgulas, sem `*` em produção. |
 | `WEBHOOK_SECRET` | Fase posterior | Somente no backend. |
 
+O formulário **Minhas vozes** usa `POST /api/v1/voices` com `multipart/form-data`, enviando `name` e `file`. O backend exige autenticação de sessão, limita o arquivo a 25 MB, aceita WAV/MP3/WebM e encaminha a amostra ao endpoint `POST /voices` do servidor definido em `XTTS_SERVER_URL`. O campo de arquivo esperado pelo servidor XTTS é `file`; se a API remota usar outro contrato, esse adaptador deve ser ajustado em `server/services/xtts.ts`.
+
 Configure um volume persistente caso o storage local de áudio seja ativado. Não use o filesystem efêmero do container para arquivos que precisam sobreviver a reinícios.
 
 ## Reverse proxy e HTTPS
@@ -29,9 +31,9 @@ No EasyPanel, aponte o domínio para a porta interna do serviço e habilite TLS.
 
 Execute as migrations como etapa controlada de release, usando o mesmo `DATABASE_URL` do serviço. Faça backup antes de alterações de schema. O compose incluído usa MySQL 8 porque o projeto atual foi inicializado no scaffold Drizzle/MySQL/TiDB; ele **não é PostgreSQL**.
 
-## Bloqueio arquitetural identificado
+## Limites conhecidos
 
-O MVP foi inicializado no runtime WebDev com Node/Express, tRPC e Drizzle/MySQL/TiDB. Isso permite validar o painel e o deploy do frontend/backend atual, mas ainda não cumpre integralmente o alvo original FastAPI + PostgreSQL + Redis nem implementa a integração real `/api/v1/tts` → XTTS. Antes de produção definitiva, é necessário escolher entre manter este runtime ou migrar a API para FastAPI/PostgreSQL e conectar o frontend a ela.
+O runtime atual usa Node/Express, tRPC e Drizzle/MySQL/TiDB. A geração `/api/v1/tts` e o upload `/api/v1/voices` estão implementados como adaptadores para o servidor XTTS remoto. A gravação direta pelo navegador pode gerar WebM; para servidores XTTS que aceitem somente WAV, selecione um arquivo WAV/MP3 ou adicione uma etapa de transcodificação antes do encaminhamento.
 
 ## Checklist antes de publicar
 
@@ -40,6 +42,8 @@ O MVP foi inicializado no runtime WebDev com Node/Express, tRPC e Drizzle/MySQL/
 - [ ] Testar `/health` e `/api/v1/health` pelo domínio HTTPS.
 - [ ] Executar migrations no banco correto.
 - [ ] Confirmar conectividade backend → `67.217.247.57:8000` com timeout/retry.
+- [ ] Testar `POST /api/v1/voices` com uma amostra WAV/MP3 e verificar a voz no endpoint remoto `/voices`.
+- [ ] Testar gravação pelo microfone; se o servidor não aceitar WebM, usar WAV/MP3.
 - [ ] Confirmar que a API Key XTTS não aparece em bundles, logs ou respostas.
 - [ ] Configurar backup dos volumes de banco, Redis e storage.
 - [ ] Habilitar logs e alertas de reinício do container.

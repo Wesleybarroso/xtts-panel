@@ -43,6 +43,25 @@ export async function getXttsInfo() {
   return response.json() as Promise<Record<string, unknown>>;
 }
 
+export async function uploadXttsVoice(input: { name: string; filename: string; contentType: string; bytes: Buffer }) {
+  if (!ENV.xttsServerUrl) throw new Error("XTTS server is not configured");
+  const form = new FormData();
+  form.append("name", input.name);
+  form.append("file", new Blob([new Uint8Array(input.bytes)], { type: input.contentType }), input.filename);
+  const response = await fetch(`${baseUrl()}/voices`, {
+    method: "POST",
+    headers: headers(),
+    body: form,
+    signal: AbortSignal.timeout(120000),
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`XTTS voice upload returned ${response.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`);
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  return contentType.includes("application/json") ? await response.json() : { success: true };
+}
+
 export async function generateXttsAudio(input: {
   text: string;
   language: string;

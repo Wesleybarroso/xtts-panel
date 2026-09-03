@@ -7,7 +7,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
-import { generateXttsAudio } from "../services/xtts";
+import { generateXttsAudio, uploadXttsVoice } from "../services/xtts";
 import { saveAudio } from "../services/storage";
 import { createJob, getJobById } from "../db";
 import { createContext } from "./context";
@@ -49,6 +49,34 @@ async function startServer() {
     res.status(healthy ? 200 : 503).json({ success: healthy, data: { status: healthy ? "healthy" : "degraded", database: database ? "configured" : "missing", redis: redis ? "configured" : "missing", xtts_servers: xtts ? 1 : 0 }, message: healthy ? "Operation completed successfully" : "One or more dependencies are not configured" });
   });
   const upload = multer({ limits: { fields: 4, fieldSize: 5000 } });
+  const voiceUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { files: 1, fileSize: 25 * 1024 * 1024, fields: 2, fieldSize: 160 },
+  });
+  app.post("/api/v1/voices", voiceUpload.single("file"), async (req, res) => {
+    let user;
+    try {
+      user = await sdk.authenticateRequest(req);
+    } catch {
+      return res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "Authentication is required" } });
+    }
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    const file = req.file;
+    if (!name || name.length > 120 || !file || !file.buffer.length) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_REQUEST", message: "name and an audio file are required" } });
+    }
+    if (!/^audio\/(wav|mpeg|mp3|x-wav|wave|webm)$/.test(file.mimetype) && !/\.(wav|mp3|mpeg|webm)$/i.test(file.originalname)) {
+      return res.status(400).json({ success: false, error: { code: "INVALID_FILE", message: "Only WAV, MP3 or WebM audio files are accepted" } });
+    }
+    try {
+      const result = await uploadXttsVoice({ name, filename: file.originalname || `${name}.wav`, contentType: file.mimetype || "audio/wav", bytes: file.buffer });
+      console.info(`[XTTS] Voice uploaded by user ${user.id}: ${name}`);
+      return res.status(201).json({ success: true, data: result, voice: { name, filename: file.originalname, size: file.size } });
+    } catch (error) {
+      console.error("[XTTS] Voice upload failed:", error instanceof Error ? error.message : "unknown error");
+      return res.status(502).json({ success: false, error: { code: "XTTS_UNAVAILABLE", message: "The XTTS server could not save the voice" } });
+    }
+  });
   app.post("/api/v1/tts", upload.none(), async (req, res) => {
     const startedAt = Date.now();
     let user;
