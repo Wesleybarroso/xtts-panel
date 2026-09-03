@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, jobs, servers, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,30 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function listServers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(servers).orderBy(desc(servers.createdAt));
+}
+
+export async function listJobs(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(jobs).orderBy(desc(jobs.createdAt)).limit(Math.min(limit, 100));
+}
+
+export async function getJobStats() {
+  const db = await getDb();
+  if (!db) return { total: 0, completed: 0, failed: 0, processing: 0 };
+  const rows = await db.select().from(jobs);
+  return {
+    total: rows.length,
+    completed: rows.filter(job => job.status === "completed").length,
+    failed: rows.filter(job => job.status === "failed").length,
+    processing: rows.filter(job => job.status === "processing" || job.status === "queued").length,
+  };
 }
 
 // TODO: add feature queries here as your schema grows.
