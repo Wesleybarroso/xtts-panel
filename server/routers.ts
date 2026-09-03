@@ -5,7 +5,7 @@ import { publicProcedure, router } from "./_core/trpc";
 import { protectedProcedure } from "./_core/trpc";
 import { listJobs, listServers, getJobStats } from "./db";
 import { z } from "zod";
-import { getXttsHealth, getXttsSpeakers } from "./services/xtts";
+import { getXttsHealth, getXttsInfo, getXttsSpeakers } from "./services/xtts";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -24,6 +24,7 @@ export const appRouter = router({
   servers: router({
     list: protectedProcedure.query(() => listServers()),
     health: protectedProcedure.query(async () => getXttsHealth()),
+    info: protectedProcedure.query(async () => getXttsInfo()),
   }),
   voices: router({
     list: protectedProcedure.query(async () => getXttsSpeakers()),

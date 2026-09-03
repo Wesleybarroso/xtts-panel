@@ -24,3 +24,10 @@ export async function getXttsSpeakers() {
   if (payload && typeof payload === "object" && "speakers" in payload && Array.isArray(payload.speakers)) return payload.speakers;
   return [];
 }
+
+export async function getXttsInfo() {
+  if (!ENV.xttsServerUrl) return { status: "not_configured" as const };
+  const response = await fetch(`${baseUrl()}/info`, { headers: headers(), signal: AbortSignal.timeout(8000) });
+  if (!response.ok) throw new Error(`XTTS info returned ${response.status}`);
+  return response.json() as Promise<Record<string, unknown>>;
+}
