@@ -8,6 +8,10 @@ function baseUrl() {
   return ENV.xttsServerUrl.replace(/\/$/, "");
 }
 
+// The current XTTS VPS runs on CPU with MAX_CONCURRENT_JOBS=1.
+// Keep a process-local queue so a second request never competes with the first.
+let generationQueue: Promise<unknown> = Promise.resolve();
+
 export async function getXttsHealth() {
   if (!ENV.xttsServerUrl) return { status: "not_configured" as const };
   const response = await fetch(`${baseUrl()}/health`, { headers: headers(), signal: AbortSignal.timeout(5000) });
@@ -45,18 +49,45 @@ export async function generateXttsAudio(input: {
   speaker: string;
   format: "mp3" | "wav";
 }) {
+  const run = generationQueue.then(() => generateXttsAudioNow(input));
+  generationQueue = run.catch(() => undefined);
+  return run;
+}
+
+async function generateXttsAudioNow(input: {
+  text: string;
+  language: string;
+  speaker: string;
+  format: "mp3" | "wav";
+}) {
   if (!ENV.xttsServerUrl) throw new Error("XTTS server is not configured");
-  const form = new FormData();
+  let form = new FormData();
   form.append("text", input.text);
   form.append("language", input.language);
   form.append("speaker", input.speaker);
   form.append("format", input.format);
-  const response = await fetch(`${baseUrl()}/tts`, {
-    method: "POST",
-    headers: headers(),
-    body: form,
-    signal: AbortSignal.timeout(120000),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${baseUrl()}/tts`, {
+      method: "POST",
+      headers: headers(),
+      body: form,
+      signal: AbortSignal.timeout(120000),
+    });
+  } catch (error) {
+    await new Promise(resolve => setTimeout(resolve, 750));
+    form = new FormData();
+    form.append("text", input.text);
+    form.append("language", input.language);
+    form.append("speaker", input.speaker);
+    form.append("format", input.format);
+    response = await fetch(`${baseUrl()}/tts`, {
+      method: "POST",
+      headers: headers(),
+      body: form,
+      signal: AbortSignal.timeout(120000),
+    }).catch(() => { throw new Error("XTTS server unavailable or overloaded. Please try again."); });
+  }
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     throw new Error(`XTTS generation returned ${response.status}${detail ? `: ${detail.slice(0, 200)}` : ""}`);
