@@ -15,6 +15,13 @@ export async function getXttsHealth() {
   return response.json() as Promise<{ status: string; device?: string; cuda?: boolean }>;
 }
 
+export async function getXttsMonitor() {
+  if (!ENV.xttsServerUrl) return { status: "not_configured" as const };
+  const response = await fetch(`${baseUrl()}/monitor`, { headers: headers(), signal: AbortSignal.timeout(8000) });
+  if (!response.ok) throw new Error(`XTTS monitor returned ${response.status}`);
+  return response.json() as Promise<Record<string, unknown>>;
+}
+
 export async function getXttsSpeakers() {
   if (!ENV.xttsServerUrl) return [];
   const response = await fetch(`${baseUrl()}/speakers`, { headers: headers(), signal: AbortSignal.timeout(8000) });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateXttsAudio, getXttsHealth, getXttsInfo, getXttsSpeakers } from "./xtts";
+import { generateXttsAudio, getXttsHealth, getXttsInfo, getXttsMonitor, getXttsSpeakers } from "./xtts";
 
 describe("XTTS integration", () => {
   it("authenticates against the configured XTTS health endpoint", async () => {
@@ -26,4 +26,13 @@ describe("XTTS integration", () => {
     expect(audio.size).toBeGreaterThan(0);
     expect(audio.audioBase64.length).toBeGreaterThan(0);
   }, 120000);
+
+  it("reads real infrastructure metrics from the XTTS monitor endpoint", async () => {
+    const monitor = await getXttsMonitor();
+    expect(monitor.status).toBe("healthy");
+    expect(monitor.cpu).toBeDefined();
+    expect(monitor.memory).toBeDefined();
+    expect(monitor.disk).toBeDefined();
+    expect(monitor.uptime).toBeDefined();
+  }, 15000);
 });

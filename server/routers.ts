@@ -6,7 +6,7 @@ import { protectedProcedure } from "./_core/trpc";
 import { listJobs, listServers, getJobStats } from "./db";
 import { z } from "zod";
 import { randomUUID } from "node:crypto";
-import { generateXttsAudio, getXttsHealth, getXttsInfo, getXttsSpeakers } from "./services/xtts";
+import { generateXttsAudio, getXttsHealth, getXttsInfo, getXttsMonitor, getXttsSpeakers } from "./services/xtts";
 import { createJob } from "./db";
 import { saveAudio } from "./services/storage";
 
@@ -28,6 +28,7 @@ export const appRouter = router({
     list: protectedProcedure.query(() => listServers()),
     health: protectedProcedure.query(async () => getXttsHealth()),
     info: protectedProcedure.query(async () => getXttsInfo()),
+    monitor: protectedProcedure.query(async () => getXttsMonitor()),
   }),
   voices: router({
     list: protectedProcedure.query(async () => getXttsSpeakers()),
